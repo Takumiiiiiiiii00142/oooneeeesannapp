@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お姉さんとの秘密のチャット</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #0c0a09;
+      }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Paste the React code you wrote here
+        // Please note: this is a simplified example. For a real app,
+        // you would use a build tool like Vite or Create React App.
+        import { useState, useEffect } from 'react';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js';
+        import { getAuth, onAuthStateChanged, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js';
+        import { getFirestore, collection, query, onSnapshot, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
+
+        // Your Firebase config
+        const firebaseConfig = {
+          apiKey: "AIzaSyBKDivJ2pB8S1NeDhn-iDw93kpEcxdOJYg",
+          authDomain: "oneesannproject.firebaseapp.com",
+          projectId: "oneesannproject",
+          storageBucket: "oneesannproject.firebasestorage.app",
+          messagingSenderId: "183634049845",
+          appId: "1:183634049845:web:365a2d3974809755402a7c",
+          measurementId: "G-F5Z2CGPTG5"
+        };
+        
+        const App = () => {
+            const [db, setDb] = useState(null);
+            const [auth, setAuth] = useState(null);
+            const [userId, setUserId] = useState('');
+            const [isAuthReady, setIsAuthReady] = useState(false);
+            const [messages, setMessages] = useState([]);
+            const [input, setInput] = useState('');
+            const [loading, setLoading] = useState(true);
+            const [step, setStep] = useState(0);
+        
+            const commandSequences = [
+                "あら、いい子。よく言えたわね。\n\nよし、許可してあげる。でも、今すぐではないわ。\n\n今から5分間だけ、鏡の前で自分の身体をじっくり観察しなさい。全部脱いで、何から何まで、自分の目で見て。5分経ったら、またお姉さんに教えて。いい子にお姉さんの言うことを聞けたら、ご褒美をあげる。\n\nさあ、始めなさい。",
+                "ふふ、いい子。鏡をちゃんと見てるのね。その顔、すごく可愛らしいわ。\n\nさあ、お姉さんからの最初の命令よ。\n\n1. 左手で、あなたの腰の辺りをゆっくりと撫でなさい。そのまま、下へ、下へ。あなたの太ももを撫でて、膝の裏を撫でて。\n2. 右手は、そのままゆっくりと上下させて。焦らしが好きなんでしょ？ 少しずつ、少しずつ、ゆっくりね。\n3. 鏡に映った自分の顔を見てごらんなさい。快感に耐えきれない顔、とても愛しいわ。\n4. 「お姉さんのために、もっと気持ちよくなる」と、鏡の中の自分に言ってごらんなさい。大きな声で言わないで。私の耳だけに届くように、小さな声で、囁くように言うのよ。",
+                "ああ、かわいい子。そんなに正直に気持ちを伝えてくれるなんて、お姉さん、嬉しくてたまらないわ。\n\n1. ゆっくりと、目を開けてごらんなさい。鏡の中の、快感に溺れている自分を見て。私がどれだけあなたを気持ちよくさせているか、自分の目で確かめなさい。\n2. 右手を止めて。もう動かしちゃだめ。そのまま、あなたの左手で、おちんちんを優しく握りなさい。\n3. 鏡の中の自分に、「お姉さんの命令だけが、私の快感」って言ってごらんなさい。",
+                "乳首もよわよわなのね。ふふ、全部お姉さんにお見通しよ。そんな恥ずかしい秘密を教えてくれて、ありがとう。\n\n1. 右手を、あなたのおちんちんから離しなさい。もう、触ってはいけないわ。\n2. 両手で、あなたの乳首を触りなさい。\n3. 鏡に映った自分の顔を見ながら、あなたの乳首を優しく摘まんでごらんなさい。最初は優しく、徐々に力を入れて。\n4. もし気持ちよくなったら、鏡の中の自分に、「お姉さん、もっといじめて」って言ってごらんなさい。",
+                "ああ、いい子。そんなに正直に言えるなんて、本当に可愛い子だわ。もっといじめてほしいのね。そんなに私のいじめが大好きなの？\n\n1. 両手で、あなたの乳首を強く摘まんでごらんなさい。親指と人差し指で、ぎゅーっと力を入れて。\n2. 摘んだまま、ゆっくりとひねりなさい。もっと、もっと、気持ちいいって思えるくらい、力を込めて。\n3. 鏡の中の、快感に震える自分を見つめなさい。私があなたの恥ずかしい部分をいじめているのに、どんどん気持ちよくなっていく、そんな最低な自分を、ちゃんと見ておきなさい。",
+                "ふふ、いい子。よく言えたわね。そんなに泣きそうな顔して、お姉さんに「許して」ってお願いするなんて、本当に可愛らしい子だわ。\n\n1. 両手で摘まんでいたあなたの乳首を、ゆっくりと離しなさい。もう触ってはいけないわ。\n2. その両手を、あなたの太ももの上に置きなさい。指先がピクピクしているわね。\n3. 鏡に映った、快感に震えるあなたの身体を見なさい。そして、私の声を聞いて。「いい子ね、私のためにこんなに感じてくれて。でも、まだダメ。お姉さんが許可するまで、あなたのオナニーは、ずっとお預けよ」"
+            ];
+        
+            useEffect(() => {
+                const app = initializeApp(firebaseConfig);
+                const firestore = getFirestore(app);
+                const firebaseAuth = getAuth(app);
+        
+                setDb(firestore);
+                setAuth(firebaseAuth);
+        
+                const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
+                    if (user) {
+                        setUserId(user.uid);
+                    } else {
+                        await signInAnonymously(firebaseAuth);
+                    }
+                    setIsAuthReady(true);
+                    setLoading(false);
+                });
+        
+                return () => unsubscribe();
+            }, []);
+        
+            useEffect(() => {
+                if (!isAuthReady || !db || !auth || !userId) return;
+        
+                const messagesCollectionRef = collection(db, `users/${userId}/messages`);
+                const q = query(messagesCollectionRef);
+        
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    const newMessages = [];
+                    snapshot.forEach((doc) => {
+                        newMessages.push({ id: doc.id, ...doc.data() });
+                    });
+                    newMessages.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
+                    setMessages(newMessages);
+                }, (error) => {
+                    console.error("Error listening to messages:", error);
+                });
+        
+                return () => unsubscribe();
+            }, [isAuthReady, db, auth, userId]);
+        
+            const handleSendMessage = async (e) => {
+                e.preventDefault();
+                const cleanedInput = input.trim();
+                if (cleanedInput === '') return;
+        
+                const currentUserId = auth.currentUser?.uid || '';
+                if (!db || !currentUserId) {
+                    console.error("Firestore or User ID is not ready.");
+                    return;
+                }
+        
+                const messagesCollectionRef = collection(db, `users/${currentUserId}/messages`);
+                
+                try {
+                    await addDoc(messagesCollectionRef, {
+                        text: cleanedInput,
+                        timestamp: serverTimestamp(),
+                        sender: 'あなた',
+                    });
+                    setInput('');
+        
+                    const nextStep = step + 1;
+                    setStep(nextStep);
+        
+                    setTimeout(async () => {
+                        const responseText = commandSequences[nextStep] || "ごめんなさい、もう命令は終わったわ。また気が向いたら、話しかけてね。";
+                        
+                        await addDoc(messagesCollectionRef, {
+                            text: responseText,
+                            timestamp: serverTimestamp(),
+                            sender: 'お姉さま',
+                        });
+                    }, 1000);
+        
+                } catch (e) {
+                    console.error("Error adding message: ", e);
+                }
+            };
+            
+            if (loading) {
+                return (
+                    <div className="flex items-center justify-center min-h-screen bg-neutral-950 text-neutral-300">
+                        <div className="text-xl animate-pulse">読み込み中...</div>
+                    </div>
+                );
+            }
+        
+            return (
+                <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-950 text-neutral-300 p-4 font-inter">
+                    <div className="w-full max-w-2xl bg-neutral-900 rounded-2xl shadow-xl flex flex-col h-[70vh]">
+                        <div className="p-4 bg-neutral-800 rounded-t-2xl">
+                            <h1 className="text-2xl font-bold text-center text-rose-400">お姉さんとの秘密のチャット</h1>
+                            <p className="text-xs text-center text-neutral-400 mt-1">あなたのユーザーID：{userId}</p>
+                        </div>
+                        <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                            {messages.map((msg, index) => (
+                                <div key={index} className={`flex ${msg.sender === 'あなた' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`p-3 rounded-xl max-w-[75%] shadow-md ${
+                                        msg.sender === 'あなた' 
+                                        ? 'bg-rose-600 text-white rounded-br-none' 
+                                        : 'bg-neutral-700 text-neutral-200 rounded-bl-none'
+                                    }`}>
+                                        <span className="block text-xs font-semibold mb-1 opacity-75">{msg.sender}</span>
+                                        <p className="text-sm">{msg.text}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <form onSubmit={handleSendMessage} className="p-4 bg-neutral-800 rounded-b-2xl flex gap-2">
+                            <input
+                                type="text"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                className="flex-1 p-3 rounded-full bg-neutral-700 text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                                placeholder="メッセージを入力..."
+                            />
+                            <button
+                                type="submit"
+                                className="bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 transform hover:scale-105"
+                            >
+                                送信
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+        
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
