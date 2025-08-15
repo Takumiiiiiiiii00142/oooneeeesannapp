@@ -65,7 +65,7 @@
                 <p class="text-xs text-neutral-400 mt-1">あなたのユーザーID：<span id="userId">読み込み中...</span></p>
             </div>
             <div id="messages" class="chat-messages">
-                <!-- メッセージがここに表示されます -->
+                <!-- Messages will be injected here -->
             </div>
             <form id="chat-form" class="p-4 bg-neutral-800 rounded-b-2xl flex gap-2">
                 <input
@@ -154,7 +154,6 @@
                         userId = user.uid;
                         userIdSpan.textContent = userId;
                         
-                        // コレクション名を修正
                         const messagesRef = db.collection(`users/${userId}/messages`);
                         messagesRef.orderBy('timestamp').onSnapshot(snapshot => {
                             messagesDiv.innerHTML = '';
