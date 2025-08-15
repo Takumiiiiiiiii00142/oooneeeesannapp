@@ -153,7 +153,6 @@
                     userId = user.uid;
                     userIdSpan.textContent = userId;
                     
-                    // コレクション名を修正しました
                     const messagesRef = db.collection(`users/${userId}/messages`);
                     messagesRef.orderBy('timestamp').onSnapshot(snapshot => {
                         messagesDiv.innerHTML = '';
@@ -169,12 +168,11 @@
         });
         
         // フォーム送信時の処理
-        chat-form.addEventListener('submit', (e) => {
+        chatForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const input = messageInput.value.trim();
             if (input === '') return;
         
-            // コレクション名を修正しました
             db.collection(`users/${userId}/messages`).add({
                 text: input,
                 sender: 'あなた',
