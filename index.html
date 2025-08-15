@@ -40,17 +40,17 @@
         border-radius: 0.75rem;
         max-width: 75%;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        word-wrap: break-word; /* 長い単語がはみ出ないように */
+        word-wrap: break-word;
       }
       .your-message {
-        background-color: #e11d48; /* rose-600 */
+        background-color: #e11d48;
         color: white;
         border-bottom-right-radius: 0;
         align-self: flex-end;
       }
       .my-message {
-        background-color: #404040; /* neutral-700 */
-        color: #d4d4d4; /* neutral-200 */
+        background-color: #404040;
+        color: #d4d4d4;
         border-bottom-left-radius: 0;
         align-self: flex-start;
       }
@@ -65,7 +65,7 @@
                 <p class="text-xs text-neutral-400 mt-1">あなたのユーザーID：<span id="userId">読み込み中...</span></p>
             </div>
             <div id="messages" class="chat-messages">
-                <!-- メッセージがここに表示されます -->
+                <!-- Messages will be injected here -->
             </div>
             <form id="chat-form" class="p-4 bg-neutral-800 rounded-b-2xl flex gap-2">
                 <input
@@ -86,12 +86,12 @@
     </div>
 
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     
     <script>
-        // あなたのFirebase設定をここに貼り付けます
+        // Your Firebase config
         const firebaseConfig = {
           apiKey: "AIzaSyBKDivJ2pB8S1NeDhn-iDw93kpEcxdOJYg",
           authDomain: "oneesannproject.firebaseapp.com",
@@ -102,10 +102,10 @@
           measurementId: "G-F5Z2CGPTG5"
         };
         
-        // Firebaseを初期化します
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = app.auth();
+        const db = app.firestore();
         
         const messagesDiv = document.getElementById('messages');
         const messageInput = document.getElementById('message-input');
@@ -163,6 +163,8 @@
                     });
                 }
             });
+        }).catch(error => {
+            console.error("Authentication error: ", error);
         });
         
         // フォーム送信時の処理
