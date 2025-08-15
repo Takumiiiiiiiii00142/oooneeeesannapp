@@ -91,109 +91,112 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     
     <script>
-        // あなたのFirebase設定をここに貼り付けてください
-        const firebaseConfig = {
-          apiKey: "AIzaSyBKDivJ2pB8S1NeDhn-iDw93kpEcxdOJYg",
-          authDomain: "oneesannproject.firebaseapp.com",
-          projectId: "oneesannproject",
-          storageBucket: "oneesannproject.firebasestorage.app",
-          messagingSenderId: "183634049845",
-          appId: "1:183634049845:web:79c178cba1a07550402a7c",
-          measurementId: "G-JKZDX61DKM"
-        };
-        
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = app.auth();
-        const db = app.firestore();
-        
-        const messagesDiv = document.getElementById('messages');
-        const messageInput = document.getElementById('message-input');
-        const chatForm = document.getElementById('chat-form');
-        const userIdSpan = document.getElementById('userId');
-        
-        let userId = '';
-        let step = 0;
-
-        const commandSequences = [
-            "あら、いい子。よく言えたわね。\n\nよし、許可してあげる。でも、今すぐではないわ。\n\n今から5分間だけ、鏡の前で自分の身体をじっくり観察しなさい。全部脱いで、何から何まで、自分の目で見て。5分経ったら、またお姉さんに教えて。いい子にお姉さんの言うことを聞けたら、ご褒美をあげる。\n\nさあ、始めなさい。",
-            "ふふ、いい子。鏡をちゃんと見てるね。その顔、すごく可愛らしいわ。\n\nさあ、お姉さんからの最初の命令よ。\n\n1. 左手で、あなたの腰の辺りをゆっくりと撫でなさい。そのまま、下へ、下へ。あなたの太ももを撫でて、膝の裏を撫でて。\n2. 右手は、そのままゆっくりと上下させて。焦らしが好きなんでしょ？ 少しずつ、少しずつ、ゆっくりね。\n3. 鏡に映った自分の顔を見てごらんなさい。快感に耐えきれない顔、とても愛しいわ。\n4. 「お姉さんのために、もっと気持ちよくなる」と、鏡の中の自分に言ってごらんなさい。大きな声で言わないで。私の耳だけに届くように、小さな声で、囁くように言うのよ。",
-            "ああ、かわいい子。そんなに正直に気持ちを伝えてくれるなんて、お姉さん、嬉しくてたまらないわ。\n\n1. ゆっくりと、目を開けてごらんなさい。鏡の中の、快感に溺れている自分を見て。私がどれだけあなたを気持ちよくさせているか、自分の目で確かめなさい。\n2. 右手を止めて。もう動かしちゃだめ。そのまま、あなたの左手で、おちんちんを優しく握りなさい。\n3. 鏡の中の自分に、「お姉さんの命令だけが、私の快感」って言ってごらんなさい。",
-            "乳首もよわよわなのね。ふふ、全部お姉さんにお見通しよ。そんな恥ずかしい秘密を教えてくれて、ありがとう。\n\n1. 右手を、あなたのおちんちんから離しなさい。もう、触ってはいけないわ。\n2. 両手で、あなたの乳首を触りなさい。\n3. 鏡に映った自分の顔を見ながら、あなたの乳首を優しく摘まんでごらんなさい。最初は優しく、徐々に力を入れて。\n4. もし気持ちよくなったら、鏡の中の自分に、「お姉さん、もっといじめて」って言ってごらんなさい。",
-            "ああ、いい子。そんなに正直に言えるなんて、本当に可愛い子だわ。もっといじめてほしいのね。そんなに私のいじめが大好きなの？\n\n1. 両手で、あなたの乳首を強く摘まんでごらんなさい。親指と人差し指で、ぎゅーっと力を入れて。\n2. 摘んだまま、ゆっくりとひねりなさい。もっと、もっと、気持ちいいって思えるくらい、力を込めて。\n3. 鏡の中の、快感に震える自分を見つめなさい。私があなたの恥ずかしい部分をいじめているのに、どんどん気持ちよくなっていく、そんな最低な自分を、ちゃんと見ておきなさい。",
-            "ふふ、いい子。よく言えたわね。そんなに泣きそうな顔して、お姉さんに「許して」ってお願いするなんて、本当に可愛らしい子だわ。\n\n1. 両手で摘まんでいたあなたの乳首を、ゆっくりと離しなさい。もう触ってはいけないわ。\n2. その両手を、あなたの太ももの上に置きなさい。指先がピクピクしているわね。\n3. 鏡に映った、快感に震えるあなたの身体を見なさい。そして、私の声を聞いて。「いい子ね、私のためにこんなに感じてくれて。でも、まだダメ。お姉さんが許可するまで、あなたのオナニーは、ずっとお預けよ」"
-        ];
-        
-        // メッセージを表示する関数
-        const displayMessage = (text, sender) => {
-            const messageWrapper = document.createElement('div');
-            messageWrapper.classList.add('flex', sender === 'あなた' ? 'justify-end' : 'justify-start');
-
-            const messageBubble = document.createElement('div');
-            messageBubble.classList.add('message-bubble', sender === 'あなた' ? 'your-message' : 'my-message');
-
-            const senderSpan = document.createElement('span');
-            senderSpan.classList.add('block', 'text-xs', 'font-semibold', 'opacity-75', 'mb-1');
-            senderSpan.textContent = sender;
-
-            const messageText = document.createElement('p');
-            messageText.classList.add('text-sm');
-            messageText.innerText = text; // innerTextを使用して改行を反映
+        document.addEventListener('DOMContentLoaded', () => {
+            // あなたのFirebase設定をここに貼り付けてください
+            const firebaseConfig = {
+              apiKey: "AIzaSyBKDivJ2pB8S1NeDhn-iDw93kpEcxdOJYg",
+              authDomain: "oneesannproject.firebaseapp.com",
+              projectId: "oneesannproject",
+              storageBucket: "oneesannproject.firebasestorage.app",
+              messagingSenderId: "183634049845",
+              appId: "1:183634049845:web:79c178cba1a07550402a7c",
+              measurementId: "G-JKZDX61DKM"
+            };
             
-            messageBubble.appendChild(senderSpan);
-            messageBubble.appendChild(messageText);
-            messagesDiv.appendChild(messageWrapper);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        };
-        
-        // 認証と初期化
-        auth.signInAnonymously().then(() => {
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    userId = user.uid;
-                    userIdSpan.textContent = userId;
-                    
-                    const messagesRef = db.collection(`users/${userId}/messages`);
-                    messagesRef.orderBy('timestamp').onSnapshot(snapshot => {
-                        messagesDiv.innerHTML = '';
-                        snapshot.forEach(doc => {
-                            const data = doc.data();
-                            displayMessage(data.text, data.sender);
+            // Initialize Firebase
+            const app = firebase.initializeApp(firebaseConfig);
+            const auth = app.auth();
+            const db = app.firestore();
+            
+            const messagesDiv = document.getElementById('messages');
+            const messageInput = document.getElementById('message-input');
+            const chatForm = document.getElementById('chat-form');
+            const userIdSpan = document.getElementById('userId');
+            
+            let userId = '';
+            let step = 0;
+
+            const commandSequences = [
+                "あら、いい子。よく言えたわね。\n\nよし、許可してあげる。でも、今すぐではないわ。\n\n今から5分間だけ、鏡の前で自分の身体をじっくり観察しなさい。全部脱いで、何から何まで、自分の目で見て。5分経ったら、またお姉さんに教えて。いい子にお姉さんの言うことを聞けたら、ご褒美をあげる。\n\nさあ、始めなさい。",
+                "ふふ、いい子。鏡をちゃんと見てるね。その顔、すごく可愛らしいわ。\n\nさあ、お姉さんからの最初の命令よ。\n\n1. 左手で、あなたの腰の辺りをゆっくりと撫でなさい。そのまま、下へ、下へ。あなたの太ももを撫でて、膝の裏を撫でて。\n2. 右手は、そのままゆっくりと上下させて。焦らしが好きなんでしょ？ 少しずつ、少しずつ、ゆっくりね。\n3. 鏡に映った自分の顔を見てごらんなさい。快感に耐えきれない顔、とても愛しいわ。\n4. 「お姉さんのために、もっと気持ちよくなる」と、鏡の中の自分に言ってごらんなさい。大きな声で言わないで。私の耳だけに届くように、小さな声で、囁くように言うのよ。",
+                "ああ、かわいい子。そんなに正直に気持ちを伝えてくれるなんて、お姉さん、嬉しくてたまらないわ。\n\n1. ゆっくりと、目を開けてごらんなさい。鏡の中の、快感に溺れている自分を見て。私がどれだけあなたを気持ちよくさせているか、自分の目で確かめなさい。\n2. 右手を止めて。もう動かしちゃだめ。そのまま、あなたの左手で、おちんちんを優しく握りなさい。\n3. 鏡の中の自分に、「お姉さんの命令だけが、私の快感」って言ってごらんなさい。",
+                "乳首もよわよわなのね。ふふ、全部お姉さんにお見通しよ。そんな恥ずかしい秘密を教えてくれて、ありがとう。\n\n1. 右手を、あなたのおちんちんから離しなさい。もう、触ってはいけないわ。\n2. 両手で、あなたの乳首を触りなさい。\n3. 鏡に映った自分の顔を見ながら、あなたの乳首を優しく摘まんでごらんなさい。最初は優しく、徐々に力を入れて。\n4. もし気持ちよくなったら、鏡の中の自分に、「お姉さん、もっといじめて」って言ってごらんなさい。",
+                "ああ、いい子。そんなに正直に言えるなんて、本当に可愛い子だわ。もっといじめてほしいのね。そんなに私のいじめが大好きなの？\n\n1. 両手で、あなたの乳首を強く摘まんでごらんなさい。親指と人差し指で、ぎゅーっと力を入れて。\n2. 摘んだまま、ゆっくりとひねりなさい。もっと、もっと、気持ちいいって思えるくらい、力を込めて。\n3. 鏡の中の、快感に震える自分を見つめなさい。私があなたの恥ずかしい部分をいじめているのに、どんどん気持ちよくなっていく、そんな最低な自分を、ちゃんと見ておきなさい。",
+                "ふふ、いい子。よく言えたわね。そんなに泣きそうな顔して、お姉さんに「許して」ってお願いするなんて、本当に可愛らしい子だわ。\n\n1. 両手で摘まんでいたあなたの乳首を、ゆっくりと離しなさい。もう触ってはいけないわ。\n2. その両手を、あなたの太ももの上に置きなさい。指先がピクピクしているわね。\n3. 鏡に映った、快感に震えるあなたの身体を見なさい。そして、私の声を聞いて。「いい子ね、私のためにこんなに感じてくれて。でも、まだダメ。お姉さんが許可するまで、あなたのオナニーは、ずっとお預けよ」"
+            ];
+            
+            // メッセージを表示する関数
+            const displayMessage = (text, sender) => {
+                const messageWrapper = document.createElement('div');
+                messageWrapper.classList.add('flex', sender === 'あなた' ? 'justify-end' : 'justify-start');
+
+                const messageBubble = document.createElement('div');
+                messageBubble.classList.add('message-bubble', sender === 'あなた' ? 'your-message' : 'my-message');
+
+                const senderSpan = document.createElement('span');
+                senderSpan.classList.add('block', 'text-xs', 'font-semibold', 'opacity-75', 'mb-1');
+                senderSpan.textContent = sender;
+
+                const messageText = document.createElement('p');
+                messageText.classList.add('text-sm');
+                messageText.innerText = text;
+                
+                messageBubble.appendChild(senderSpan);
+                messageBubble.appendChild(messageText);
+                messagesDiv.appendChild(messageWrapper);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            };
+            
+            // 認証と初期化
+            auth.signInAnonymously().then(() => {
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userIdSpan.textContent = userId;
+                        
+                        // コレクション名を修正
+                        const messagesRef = db.collection(`users/${userId}/messages`);
+                        messagesRef.orderBy('timestamp').onSnapshot(snapshot => {
+                            messagesDiv.innerHTML = '';
+                            snapshot.forEach(doc => {
+                                const data = doc.data();
+                                displayMessage(data.text, data.sender);
+                            });
                         });
-                    });
-                }
-            });
-        }).catch(error => {
-            console.error("Authentication error: ", error);
-        });
-        
-        // フォーム送信時の処理
-        chatForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const input = messageInput.value.trim();
-            if (input === '') return;
-        
-            db.collection(`users/${userId}/messages`).add({
-                text: input,
-                sender: 'あなた',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                messageInput.value = '';
-                
-                const nextStep = step + 1;
-                step = nextStep;
-                
-                // 次のステップの命令を送信
-                setTimeout(() => {
-                    const responseText = commandSequences[nextStep] || "ごめんなさい、もう命令は終わったわ。また気が向いたら、話しかけてね。";
-                    db.collection(`users/${userId}/messages`).add({
-                        text: responseText,
-                        sender: 'お姉さま',
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                }, 1000);
+                    }
+                });
             }).catch(error => {
-                console.error("Error adding message: ", error);
+                console.error("Authentication error: ", error);
+            });
+            
+            // フォーム送信時の処理
+            chatForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = messageInput.value.trim();
+                if (input === '') return;
+            
+                db.collection(`users/${userId}/messages`).add({
+                    text: input,
+                    sender: 'あなた',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    messageInput.value = '';
+                    
+                    const nextStep = step + 1;
+                    step = nextStep;
+                    
+                    // 次のステップの命令を送信
+                    setTimeout(() => {
+                        const responseText = commandSequences[nextStep] || "ごめんなさい、もう命令は終わったわ。また気が向いたら、話しかけてね。";
+                        db.collection(`users/${userId}/messages`).add({
+                            text: responseText,
+                            sender: 'お姉さま',
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }, 1000);
+                }).catch(error => {
+                    console.error("Error adding message: ", error);
+                });
             });
         });
     </script>
