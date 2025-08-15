@@ -40,6 +40,7 @@
         border-radius: 0.75rem;
         max-width: 75%;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        word-wrap: break-word; /* 長い単語がはみ出ないように */
       }
       .your-message {
         background-color: #e11d48; /* rose-600 */
@@ -64,7 +65,7 @@
                 <p class="text-xs text-neutral-400 mt-1">あなたのユーザーID：<span id="userId">読み込み中...</span></p>
             </div>
             <div id="messages" class="chat-messages">
-                <!-- Messages will be injected here -->
+                <!-- メッセージがここに表示されます -->
             </div>
             <form id="chat-form" class="p-4 bg-neutral-800 rounded-b-2xl flex gap-2">
                 <input
@@ -75,6 +76,7 @@
                 />
                 <button
                     type="submit"
+                    id="send-button"
                     class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 transform hover:scale-105"
                 >
                     送信
@@ -84,12 +86,12 @@
     </div>
 
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
     
     <script>
-        // Your Firebase config
+        // あなたのFirebase設定をここに貼り付けます
         const firebaseConfig = {
           apiKey: "AIzaSyBKDivJ2pB8S1NeDhn-iDw93kpEcxdOJYg",
           authDomain: "oneesannproject.firebaseapp.com",
@@ -100,10 +102,10 @@
           measurementId: "G-F5Z2CGPTG5"
         };
         
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = app.auth();
-        const db = app.firestore();
+        // Firebaseを初期化します
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
         
         const messagesDiv = document.getElementById('messages');
         const messageInput = document.getElementById('message-input');
@@ -122,23 +124,13 @@
             "ふふ、いい子。よく言えたわね。そんなに泣きそうな顔して、お姉さんに「許して」ってお願いするなんて、本当に可愛らしい子だわ。\n\n1. 両手で摘まんでいたあなたの乳首を、ゆっくりと離しなさい。もう触ってはいけないわ。\n2. その両手を、あなたの太ももの上に置きなさい。指先がピクピクしているわね。\n3. 鏡に映った、快感に震えるあなたの身体を見なさい。そして、私の声を聞いて。「いい子ね、私のためにこんなに感じてくれて。でも、まだダメ。お姉さんが許可するまで、あなたのオナニーは、ずっとお預けよ」"
         ];
         
-        // Function to display messages in the chat
+        // メッセージを表示する関数
         const displayMessage = (text, sender) => {
             const messageWrapper = document.createElement('div');
-            messageWrapper.classList.add('flex');
-            if (sender === 'あなた') {
-                messageWrapper.classList.add('justify-end');
-            } else {
-                messageWrapper.classList.add('justify-start');
-            }
+            messageWrapper.classList.add('flex', sender === 'あなた' ? 'justify-end' : 'justify-start');
 
             const messageBubble = document.createElement('div');
-            messageBubble.classList.add('message-bubble');
-            if (sender === 'あなた') {
-                messageBubble.classList.add('your-message');
-            } else {
-                messageBubble.classList.add('my-message');
-            }
+            messageBubble.classList.add('message-bubble', sender === 'あなた' ? 'your-message' : 'my-message');
 
             const senderSpan = document.createElement('span');
             senderSpan.classList.add('block', 'text-xs', 'font-semibold', 'opacity-75', 'mb-1');
@@ -146,7 +138,7 @@
 
             const messageText = document.createElement('p');
             messageText.classList.add('text-sm');
-            messageText.textContent = text;
+            messageText.innerText = text; // innerTextを使用して改行を反映
             
             messageBubble.appendChild(senderSpan);
             messageBubble.appendChild(messageText);
@@ -155,7 +147,7 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         };
         
-        // Initial setup and real-time listener
+        // 認証と初期化
         auth.signInAnonymously().then(() => {
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -174,6 +166,7 @@
             });
         });
         
+        // フォーム送信時の処理
         chatForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const input = messageInput.value.trim();
@@ -189,6 +182,7 @@
                 const nextStep = step + 1;
                 step = nextStep;
                 
+                // 次のステップの命令を送信
                 setTimeout(() => {
                     const responseText = commandSequences[nextStep] || "ごめんなさい、もう命令は終わったわ。また気が向いたら、話しかけてね。";
                     db.collection(`users/${userId}/messages`).add({
